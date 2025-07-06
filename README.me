@@ -1,0 +1,105 @@
+# DROID - AI-Powered Utility Bar
+
+A minimalist, cross-platform utility application that accepts natural language commands and executes them through AI interpretation.
+
+## Features
+
+- **Global Hotkey**: Press `Ctrl+Space` to summon DROID from anywhere
+- **Natural Language Processing**: Tell DROID what to do in plain English
+- **Local AI**: Uses Ollama with Llama 3.2 (3B) for privacy and speed
+- **Shell Command Execution**: Safely executes Windows commands
+- **Minimalist UI**: Clean, transparent overlay interface
+
+## Prerequisites
+
+### On Development Machine (Mac):
+1. **Node.js**: Install from [nodejs.org](https://nodejs.org/)
+2. **Ollama**: Install with `curl -fsSL https://ollama.com/install.sh | sh`
+3. **Llama Model**: Run `ollama pull llama3.2:3b`
+
+### On Target Machine (Windows):
+1. **Ollama**: Download from [ollama.com](https://ollama.com/)
+2. **Llama Model**: Run `ollama pull llama3.2:3b` in PowerShell
+
+## Development Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <your-repo-url>
+   cd droid
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Start Ollama** (if not already running):
+   ```bash
+   ollama serve
+   ```
+
+4. **Run in development mode**:
+   ```bash
+   npm run dev
+   ```
+
+## Building for Windows
+
+1. **Build the Windows executable**:
+   ```bash
+   npm run build:win
+   ```
+
+2. **The installer will be created in**: `dist/DROID Setup.exe`
+
+## Usage
+
+1. Press `Ctrl+Space` to open DROID
+2. Type natural language commands like:
+   - "install chrome"
+   - "open calculator"
+   - "list files"
+   - "create a new folder called projects"
+   - "show running processes"
+3. Press `Enter` to execute
+4. Press `Esc` to hide the window
+
+## Example Commands
+
+- **Software Management**: "install vlc media player", "uninstall teams"
+- **System Operations**: "open task manager", "restart explorer"
+- **File Management**: "create folder Downloads", "delete temp files"
+- **Network**: "show ip address", "ping google.com"
+
+## Security Notes
+
+- DROID executes commands on your system - only use trusted commands
+- All AI processing happens locally via Ollama
+- No data is sent to external servers
+
+## Troubleshooting
+
+### "AI service is not available"
+- Ensure Ollama is running: `ollama serve`
+- Check if the model is installed: `ollama list`
+- Verify the model is pulled: `ollama pull llama3.2:3b`
+
+### Global hotkey not working
+- Check if another application is using `Ctrl+Space`
+- Try running DROID as administrator
+
+### Commands not executing
+- Ensure you're using Windows-compatible commands
+- Check Windows security settings for script execution
+
+## Development Notes
+
+- Uses Electron for cross-platform compatibility
+- Lightweight AI model (3B parameters) for fast responses
+- Transparent, always-on-top UI for quick access
+- Safe command execution with error handling
+
+## License
+
+MIT License - See LICENSE file for details
