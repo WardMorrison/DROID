@@ -122,17 +122,41 @@ ${isMac ? `macOS Examples:
 If the request is unclear or potentially dangerous, set shellCommand to null and explain what clarification you need.`;
 
   try {
-    const response = await axios.post('http://localhost:11434/api/generate', {
-      model: 'llama3.2:3b',
-      prompt: prompt,
-      stream: false,
-      options: {
-        temperature: 0.1,
-        top_k: 10,
-        top_p: 0.3,
-        num_predict: 150
+    // Try multiple connection URLs for better compatibility
+    const urls = [
+      'http://127.0.0.1:11434/api/generate',
+      'http://localhost:11434/api/generate',
+      'http://[::1]:11434/api/generate'
+    ];
+    
+    let response;
+    let lastError;
+    
+    for (const url of urls) {
+      try {
+        response = await axios.post(url, {
+          model: 'llama3.2:3b',
+          prompt: prompt,
+          stream: false,
+          options: {
+            temperature: 0.1,
+            top_k: 10,
+            top_p: 0.3,
+            num_predict: 150
+          }
+        }, {
+          timeout: 10000 // 10 second timeout
+        });
+        break; // Success, exit loop
+      } catch (err) {
+        lastError = err;
+        continue; // Try next URL
       }
-    });
+    }
+    
+    if (!response) {
+      throw lastError;
+    }
 
     const aiText = response.data.response;
     
