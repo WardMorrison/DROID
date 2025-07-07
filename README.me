@@ -1,156 +1,157 @@
 # DROID - AI-Powered Utility Bar
 
-A minimalist, cross-platform utility application that accepts natural language commands and executes them through AI interpretation.
+A minimalist, cross-platform utility application that accepts natural language commands and executes them through local AI interpretation.
 
 ## Features
 
 - **Global Hotkey**: Press `Ctrl+Space` to summon DROID from anywhere
 - **Natural Language Processing**: Tell DROID what to do in plain English
-- **Dual AI Modes**: 
-  - **Cloud AI** (Default): Free Groq API - works instantly, no setup
-  - **Local AI**: Private Ollama for complete privacy
-- **Shell Command Execution**: Safely executes platform-specific commands
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+- **Local AI**: Uses Ollama with Llama 3.2 (3B) for privacy and speed
+- **Shell Command Execution**: Safely executes Windows/Mac commands
 - **Minimalist UI**: Clean, transparent overlay interface
+- **Windows Optimized**: IPv4-first networking, proper Windows integration
 
-## Quick Start
+## Windows Installation (Automated)
 
-### Option 1: Cloud AI (Recommended)
-1. **Get FREE Groq API Key**: Go to [console.groq.com](https://console.groq.com/keys)
-2. **Set environment variable**:
-   ```bash
-   # Windows
-   set GROQ_API_KEY=your_api_key_here
-   
-   # macOS/Linux
-   export GROQ_API_KEY=your_api_key_here
-   ```
-3. **Run**: `npm run dev`
+1. **Download the installer**: `DROID Setup.exe` from releases
+2. **Run the installer**: It will automatically install Ollama and the AI model
+3. **Launch DROID**: Use `Ctrl+Space` to activate
 
-### Option 2: Local AI (Private)
-1. **Install Ollama**: Download from [ollama.com](https://ollama.com)
-2. **Pull model**: `ollama pull llama3.2:3b`
-3. **Run**: `npm run dev`
-4. **Toggle to LOCAL** in DROID interface
+## Manual Development Setup
 
-## Installation
+### Prerequisites
 
-1. **Clone and setup**:
-   ```bash
+**Windows:**
+- Node.js 18+ from [nodejs.org](https://nodejs.org/)
+- Git for Windows
+
+**macOS (for development):**
+- Node.js 18+ from [nodejs.org](https://nodejs.org/)
+- Xcode Command Line Tools
+
+### Quick Setup (Windows)
+
+1. **Clone and run setup script**:
+   ```cmd
    git clone <your-repo-url>
    cd droid
-   npm install
-   npm run setup  # Shows setup instructions
+   setup-windows.bat
    ```
 
-2. **Development**:
+### Manual Setup
+
+1. **Install Ollama**:
+   - **Windows**: Download from [ollama.com](https://ollama.com/) or use winget:
+     ```cmd
+     winget install Ollama.Ollama
+     ```
+   - **macOS**: Download from [ollama.com](https://ollama.com/) or use Homebrew:
+     ```bash
+     brew install ollama
+     ```
+
+2. **Pull AI model**:
+   ```bash
+   ollama pull llama3.2:3b
+   ```
+
+3. **Start Ollama service**:
+   ```bash
+   ollama serve
+   ```
+
+4. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+5. **Run in development**:
    ```bash
    npm run dev
    ```
 
-3. **Build for distribution**:
-   ```bash
-   # Windows
-   npm run build:win
-   
-   # Linux
-   npm run build:linux
-   ```
+## Building for Windows
+
+**From any platform:**
+```bash
+npm run build:win     # 64-bit Windows
+npm run build:win32   # 32-bit Windows
+```
+
+**Output**: `dist/DROID Setup.exe`
 
 ## Usage
 
 1. Press `Ctrl+Space` to open DROID
 2. Type natural language commands:
-   - "install chrome"
-   - "open calculator" 
-   - "list files"
-   - "show running processes"
-   - "create folder called projects"
-3. Click **CLOUD/LOCAL** to switch AI modes
-4. Press `Enter` to execute, `Esc` to hide
+   - **Windows**: "install discord", "open task manager", "shutdown computer"
+   - **macOS**: "install discord", "open activity monitor", "restart computer"
+3. Press `Enter` to execute
+4. Press `Esc` to hide
 
-## AI Modes
-
-### Cloud Mode (Default)
-- ✅ **Free**: Groq API with generous limits
-- ✅ **Fast**: ~1-2 second responses
-- ✅ **No Setup**: Works immediately with API key
-- ✅ **Always Updated**: Latest AI models
-- ❌ **Requires Internet**: Won't work offline
-
-### Local Mode
-- ✅ **Private**: Everything runs on your machine
-- ✅ **Offline**: Works without internet
-- ✅ **Free Forever**: No API costs
-- ❌ **Setup Required**: Need to install Ollama
-- ❌ **Larger Download**: ~2GB AI model
-
-## Platform-Specific Commands
+## Example Commands
 
 ### Windows
-- **Software**: "install vlc", "uninstall teams"
-- **System**: "open task manager", "restart explorer"
-- **Files**: "create folder Downloads", "show hidden files"
+- **Software**: "install chrome", "uninstall teams", "update all programs"
+- **System**: "open task manager", "restart windows", "check disk space"
+- **Files**: "create folder Documents/Projects", "delete temp files"
+- **Network**: "show ip address", "ping google.com", "flush dns"
 
 ### macOS
-- **Software**: "install chrome", "uninstall zoom"
-- **System**: "open activity monitor", "restart finder"
-- **Files**: "create folder Documents", "show hidden files"
-
-### Linux
-- **Software**: "install firefox", "update packages"
-- **System**: "show processes", "restart networking"
-- **Files**: "create directory", "list permissions"
-
-## Windows Build Requirements
-
-To build on Windows, ensure you have:
-- **Node.js** (16+)
-- **Python** (for native modules)
-- **Visual Studio Build Tools** or **Visual Studio Community**
-
-```bash
-# Install Windows build tools
-npm install --global windows-build-tools
-```
-
-## Security & Privacy
-
-- **Cloud Mode**: Commands sent to Groq API (encrypted)
-- **Local Mode**: Everything stays on your machine
-- **Safe Execution**: Commands reviewed before execution
-- **No Data Storage**: No command history saved
+- **Software**: "install chrome", "uninstall teams", "update homebrew"
+- **System**: "open activity monitor", "restart mac", "check disk space"
+- **Files**: "create folder Documents/Projects", "empty trash"
+- **Network**: "show ip address", "ping google.com", "flush dns"
 
 ## Troubleshooting
 
-### "AI service not available"
-- **Cloud**: Check internet connection and API key
-- **Local**: Ensure Ollama is running (`ollama serve`)
+### "AI service connection failed"
+- **Windows**: Check if Ollama service is running:
+  ```cmd
+  sc query ollama
+  net start ollama
+  ```
+- **macOS**: Start Ollama manually:
+  ```bash
+  ollama serve
+  ```
+
+### "Command not found"
+- Ensure the command exists on your system
+- **Windows**: Try using full paths for programs
+- **macOS**: Check if command-line tools are installed
 
 ### Global hotkey not working
 - **Windows**: Run as administrator if needed
-- **Linux**: Check accessibility permissions
-- **macOS**: Allow in System Preferences > Privacy
+- **macOS**: Grant accessibility permissions in System Preferences
+- Try different hotkey combinations if `Ctrl+Space` conflicts
 
-### Build fails on Windows
-```bash
-# Clear and rebuild
-rm -rf node_modules dist
-npm install
-npm run build:win
-```
+### IPv6 Connection Issues
+- DROID forces IPv4 connections to avoid Windows IPv6 conflicts
+- If issues persist, disable IPv6 in Windows network settings
 
-## API Costs
+## Windows-Specific Features
 
-- **Groq API**: FREE tier (30,000 tokens/day = ~150+ commands)
-- **Local Ollama**: FREE forever (uses ~2GB RAM)
+- **Automatic Ollama installation** via NSIS installer
+- **Windows service integration** for Ollama
+- **IPv4-first networking** to avoid IPv6 conflicts
+- **Proper Windows shortcuts** and startup options
+- **Windows security compliance** with signed executables
 
-## Contributing
+## Development Notes
 
-1. Fork the repository
-2. Create feature branch
-3. Test on target platform
-4. Submit pull request
+- Uses Electron for cross-platform compatibility
+- Lightweight AI model (3B parameters) for fast responses
+- IPv4-first networking prevents Windows IPv6 issues
+- Safe command execution with proper error handling
+- Windows-optimized build process
+
+## Security
+
+- All AI processing happens locally via Ollama
+- No data sent to external servers
+- Commands executed with user permissions only
+- Windows UAC integration for elevated operations
 
 ## License
 

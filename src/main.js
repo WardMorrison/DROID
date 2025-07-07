@@ -1,22 +1,12 @@
 const { app, BrowserWindow, globalShortcut, ipcMain, screen } = require('electron');
 const path = require('path');
 const axios = require('axios');
-const Groq = require('groq-sdk');
 
 let mainWindow;
 let isVisible = false;
-let useLocal = false; // Default to cloud API
 
-// Initialize Groq client (will be set up after API key is configured)
-let groqClient = null;
-
-// Configuration for AI services
-const AI_CONFIG = {
-  // Default to free Groq API, fallback to local Ollama
-  groqApiKey: process.env.GROQ_API_KEY || 'gsk_demo_key_for_testing', // Users will need to set this
-  ollamaUrl: 'http://127.0.0.1:11434', // Use IPv4 explicitly
-  localModel: 'llama3.2:3b'
-};
+// Force IPv4 for Windows compatibility
+process.env.NODE_OPTIONS = '--dns-result-order=ipv4first';
 
 function createWindow() {
   // Get primary display dimensions
@@ -38,7 +28,8 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      enableRemoteModule: true
+      enableRemoteModule: true,
+      webSecurity: false // Allow local file access
     }
   });
 
@@ -46,12 +37,30 @@ function createWindow() {
 
   // Hide window instead of closing
   mainWindow.on('blur', () => {
-    hideWindow();
+    setTimeout(() => {
+      if (isVisible && !mainWindow.webContents.isDevToolsOpened()) {
+        hideWindow();
+      }
+    }, 100);
   });
 
   // Development tools
   if (process.argv.includes('--dev')) {
     mainWindow.webContents.openDevTools();
+  }
+
+  // Windows-specific settings
+  if (process.platform === 'win32') {
+    // Prevent window from being minimized
+    mainWindow.setSkipTaskbar(true);
+    
+    // Set window icon if available
+    try {
+      const iconPath = path.join(__dirname, '../assets/icon.ico');
+      mainWindow.setIcon(iconPath);
+    } catch (e) {
+      console.log('Icon not found, using default');
+    }
   }
 }
 
@@ -73,7 +82,7 @@ function hideWindow() {
 // IPC handlers
 ipcMain.handle('execute-command', async (event, command) => {
   try {
-    // First try cloud API, fallback to local
+    // First, get AI interpretation of the command
     const aiResponse = await getAIResponse(command);
     
     // Execute the command if AI provides a shell command
@@ -82,22 +91,19 @@ ipcMain.handle('execute-command', async (event, command) => {
       return {
         success: true,
         aiResponse: aiResponse.explanation,
-        commandOutput: result,
-        usedLocal: useLocal
+        commandOutput: result
       };
     } else {
       return {
         success: false,
         aiResponse: aiResponse.explanation,
-        needsClarification: true,
-        usedLocal: useLocal
+        needsClarification: true
       };
     }
   } catch (error) {
     return {
       success: false,
-      error: error.message,
-      usedLocal: useLocal
+      error: error.message
     };
   }
 });
@@ -106,16 +112,7 @@ ipcMain.handle('hide-window', () => {
   hideWindow();
 });
 
-ipcMain.handle('toggle-ai-mode', () => {
-  useLocal = !useLocal;
-  return { useLocal, message: useLocal ? 'Switched to Local AI' : 'Switched to Cloud AI' };
-});
-
-ipcMain.handle('get-ai-status', () => {
-  return { useLocal, groqAvailable: !!groqClient };
-});
-
-// AI Integration with Cloud + Local fallback
+// AI Integration with Ollama - Force IPv4
 async function getAIResponse(userCommand) {
   // Detect platform for appropriate commands
   const platform = process.platform;
@@ -124,7 +121,7 @@ async function getAIResponse(userCommand) {
   
   const platformInfo = isWindows ? 'Windows' : isMac ? 'macOS' : 'Linux';
   
-  const basePrompt = `You are DROID, a command execution assistant for ${platformInfo}. Convert this natural language request into a ${platformInfo} shell command.
+  const prompt = `You are DROID, a command execution assistant for ${platformInfo}. Convert this natural language request into a ${platformInfo} shell command.
 
 User request: "${userCommand}"
 
@@ -137,109 +134,90 @@ Respond with JSON in this exact format:
 ${isWindows ? `Windows Examples:
 - "install chrome" -> {"shellCommand": "winget install Google.Chrome", "explanation": "Installing Google Chrome using Windows Package Manager"}
 - "open calculator" -> {"shellCommand": "calc", "explanation": "Opening Windows Calculator"}
-- "list files" -> {"shellCommand": "dir", "explanation": "Listing files in current directory"}
-- "show processes" -> {"shellCommand": "tasklist", "explanation": "Showing running processes"}` : ''}
+- "list files" -> {"shellCommand": "dir", "explanation": "Listing files in current directory"}` : ''}
 
 ${isMac ? `macOS Examples:
 - "install chrome" -> {"shellCommand": "brew install --cask google-chrome", "explanation": "Installing Google Chrome using Homebrew"}
 - "open calculator" -> {"shellCommand": "open -a Calculator", "explanation": "Opening macOS Calculator"}
-- "list files" -> {"shellCommand": "ls -la", "explanation": "Listing files in current directory"}
-- "show processes" -> {"shellCommand": "ps aux", "explanation": "Showing running processes"}` : ''}
+- "list files" -> {"shellCommand": "ls -la", "explanation": "Listing files in current directory"}` : ''}
 
 If the request is unclear or potentially dangerous, set shellCommand to null and explain what clarification you need.`;
 
-  // Try cloud API first, then local fallback
-  if (!useLocal) {
-    try {
-      return await getGroqResponse(basePrompt);
-    } catch (error) {
-      console.log('Cloud API failed, trying local...', error.message);
-      useLocal = true; // Auto-switch to local on failure
-    }
-  }
-  
-  // Try local Ollama
   try {
-    return await getOllamaResponse(basePrompt);
-  } catch (error) {
-    console.error('Both AI services failed:', error);
-    return {
-      shellCommand: null,
-      explanation: "AI services are not available. Please check your internet connection or install Ollama locally."
-    };
-  }
-}
-
-// Cloud AI using Groq (FREE)
-async function getGroqResponse(prompt) {
-  if (!groqClient) {
-    groqClient = new Groq({
-      apiKey: AI_CONFIG.groqApiKey
+    // Force IPv4 to avoid IPv6 conflicts
+    const response = await axios.post('http://127.0.0.1:11434/api/generate', {
+      model: 'llama3.2:3b',
+      prompt: prompt,
+      stream: false,
+      options: {
+        temperature: 0.1,
+        top_k: 10,
+        top_p: 0.3,
+        num_predict: 150
+      }
+    }, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
-  }
-  
-  const completion = await groqClient.chat.completions.create({
-    messages: [
-      { role: "system", content: "You are DROID, a helpful command execution assistant. Always respond with valid JSON." },
-      { role: "user", content: prompt }
-    ],
-    model: "llama3-8b-8192", // Fast, free model
-    temperature: 0.1,
-    max_tokens: 150
-  });
-  
-  const aiText = completion.choices[0]?.message?.content || '';
-  
-  // Extract JSON from AI response
-  const jsonMatch = aiText.match(/\{[\s\S]*?\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
-  } else {
-    return {
-      shellCommand: null,
-      explanation: "I couldn't understand that request. Please try rephrasing."
-    };
-  }
-}
 
-// Local AI using Ollama (PRIVATE)
-async function getOllamaResponse(prompt) {
-  const response = await axios.post(`${AI_CONFIG.ollamaUrl}/api/generate`, {
-    model: AI_CONFIG.localModel,
-    prompt: prompt,
-    stream: false,
-    options: {
-      temperature: 0.1,
-      top_k: 10,
-      top_p: 0.3,
-      num_predict: 150
+    const aiText = response.data.response;
+    
+    // Extract JSON from AI response
+    const jsonMatch = aiText.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    } else {
+      return {
+        shellCommand: null,
+        explanation: "I couldn't understand that request. Please try rephrasing."
+      };
     }
-  }, {
-    timeout: 10000 // 10 second timeout
-  });
-
-  const aiText = response.data.response;
-  
-  // Extract JSON from AI response
-  const jsonMatch = aiText.match(/\{[\s\S]*?\}/);
-  if (jsonMatch) {
-    return JSON.parse(jsonMatch[0]);
-  } else {
+  } catch (error) {
+    console.error('Ollama API Error:', error);
+    
+    // Check if Ollama is running and try to start it
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      return {
+        shellCommand: null,
+        explanation: "Ollama is not running. Please start it with 'ollama serve' or check installation."
+      };
+    }
+    
     return {
       shellCommand: null,
-      explanation: "I couldn't understand that request. Please try rephrasing."
+      explanation: "AI service connection failed. Check if Ollama is running on port 11434."
     };
   }
 }
 
-// Execute shell commands safely
+// Execute shell commands safely with Windows compatibility
 function executeShellCommand(command) {
   return new Promise((resolve, reject) => {
     const { exec } = require('child_process');
     
-    exec(command, (error, stdout, stderr) => {
+    // Windows-specific command execution
+    const options = {
+      timeout: 30000, // 30 second timeout
+      maxBuffer: 1024 * 1024 // 1MB buffer
+    };
+    
+    // For Windows, use cmd /c prefix for better compatibility
+    const finalCommand = process.platform === 'win32' 
+      ? `cmd /c "${command}"` 
+      : command;
+    
+    exec(finalCommand, options, (error, stdout, stderr) => {
       if (error) {
-        reject(new Error(stderr || error.message));
+        // Handle common Windows errors
+        if (error.code === 'ENOENT') {
+          reject(new Error(`Command not found: ${command}`));
+        } else if (error.code === 'ETIMEDOUT') {
+          reject(new Error(`Command timed out: ${command}`));
+        } else {
+          reject(new Error(stderr || error.message));
+        }
       } else {
         resolve(stdout.trim());
       }
@@ -250,13 +228,6 @@ function executeShellCommand(command) {
 // App event handlers
 app.whenReady().then(() => {
   createWindow();
-  
-  // Initialize Groq client
-  if (AI_CONFIG.groqApiKey && AI_CONFIG.groqApiKey !== 'gsk_demo_key_for_testing') {
-    groqClient = new Groq({
-      apiKey: AI_CONFIG.groqApiKey
-    });
-  }
   
   // Register global hotkey (Ctrl+Space)
   const ret = globalShortcut.register('CommandOrControl+Space', () => {

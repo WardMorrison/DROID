@@ -11,25 +11,9 @@ let isProcessing = false;
 // Focus input when window shows
 window.addEventListener('load', async () => {
     commandInput.focus();
-    await updateAIStatus();
 });
 
-// AI toggle functionality
-aiToggle.addEventListener('click', async () => {
-    const result = await ipcRenderer.invoke('toggle-ai-mode');
-    updateAIToggle(result.useLocal);
-    showResponse(result.message, '', 'success');
-});
-
-async function updateAIStatus() {
-    const status = await ipcRenderer.invoke('get-ai-status');
-    updateAIToggle(status.useLocal);
-}
-
-function updateAIToggle(useLocal) {
-    aiToggle.textContent = useLocal ? 'LOCAL' : 'CLOUD';
-    aiToggle.className = `ai-toggle ${useLocal ? 'local' : 'cloud'}`;
-}
+// AI toggle functionality removed for fully local mode
 
 // Handle input events
 commandInput.addEventListener('keydown', async (e) => {

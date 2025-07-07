@@ -4,13 +4,14 @@
   "description": "Minimalist AI-powered utility bar for Windows",
   "main": "src/main.js",
   "scripts": {
-    "setup": "node setup.js",
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder",
     "build:win": "electron-builder --windows --x64",
-    "build:linux": "electron-builder --linux --x64",
-    "pack": "electron-builder --dir"
+    "build:win32": "electron-builder --windows --ia32", 
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "note": "Windows users: Please use the installer, do not run setup.js directly."
   },
   "keywords": ["electron", "ai", "utility", "automation"],
   "author": "Your Name",
@@ -20,8 +21,7 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "groq-sdk": "^0.4.0"
+    "axios": "^1.6.0"
   },
   "build": {
     "appId": "com.yourname.droid",
@@ -31,26 +31,41 @@
     },
     "files": [
       "src/**/*",
-      "node_modules/**/*"
+      "!src/**/*.map",
+      "node_modules/**/*",
+      "!node_modules/**/*.md",
+      "!node_modules/**/LICENSE*",
+      "!node_modules/**/README*",
+      "installer.nsh",
+      "setup-windows.bat",
+      "setup.js"
     ],
     "win": {
-      "target": {
-        "target": "nsis",
-        "arch": ["x64"]
-      },
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ],
       "icon": "assets/icon.ico",
       "requestedExecutionLevel": "asInvoker"
     },
-    "linux": {
-      "target": {
-        "target": "AppImage",
-        "arch": ["x64"]
-      },
-      "icon": "assets/icon.png"
-    },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "DROID",
+      "include": "installer.nsh"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Utility"
     }
   }
 }
