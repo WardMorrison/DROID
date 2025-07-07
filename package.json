@@ -4,10 +4,12 @@
   "description": "Minimalist AI-powered utility bar for Windows",
   "main": "src/main.js",
   "scripts": {
+    "setup": "node setup.js",
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder",
-    "build:win": "electron-builder --windows",
+    "build:win": "electron-builder --windows --x64",
+    "build:linux": "electron-builder --linux --x64",
     "pack": "electron-builder --dir"
   },
   "keywords": ["electron", "ai", "utility", "automation"],
@@ -18,7 +20,8 @@
     "electron-builder": "^24.9.1"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "groq-sdk": "^0.4.0"
   },
   "build": {
     "appId": "com.yourname.droid",
@@ -31,8 +34,19 @@
       "node_modules/**/*"
     ],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": {
+        "target": "nsis",
+        "arch": ["x64"]
+      },
+      "icon": "assets/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      "icon": "assets/icon.png"
     },
     "nsis": {
       "oneClick": false,

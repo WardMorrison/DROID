@@ -6,99 +6,151 @@ A minimalist, cross-platform utility application that accepts natural language c
 
 - **Global Hotkey**: Press `Ctrl+Space` to summon DROID from anywhere
 - **Natural Language Processing**: Tell DROID what to do in plain English
-- **Local AI**: Uses Ollama with Llama 3.2 (3B) for privacy and speed
-- **Shell Command Execution**: Safely executes Windows commands
+- **Dual AI Modes**: 
+  - **Cloud AI** (Default): Free Groq API - works instantly, no setup
+  - **Local AI**: Private Ollama for complete privacy
+- **Shell Command Execution**: Safely executes platform-specific commands
+- **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Minimalist UI**: Clean, transparent overlay interface
 
-## Prerequisites
+## Quick Start
 
-### On Development Machine (Mac):
-1. **Node.js**: Install from [nodejs.org](https://nodejs.org/)
-2. **Ollama**: Install with `curl -fsSL https://ollama.com/install.sh | sh`
-3. **Llama Model**: Run `ollama pull llama3.2:3b`
+### Option 1: Cloud AI (Recommended)
+1. **Get FREE Groq API Key**: Go to [console.groq.com](https://console.groq.com/keys)
+2. **Set environment variable**:
+   ```bash
+   # Windows
+   set GROQ_API_KEY=your_api_key_here
+   
+   # macOS/Linux
+   export GROQ_API_KEY=your_api_key_here
+   ```
+3. **Run**: `npm run dev`
 
-### On Target Machine (Windows):
-1. **Ollama**: Download from [ollama.com](https://ollama.com/)
-2. **Llama Model**: Run `ollama pull llama3.2:3b` in PowerShell
+### Option 2: Local AI (Private)
+1. **Install Ollama**: Download from [ollama.com](https://ollama.com)
+2. **Pull model**: `ollama pull llama3.2:3b`
+3. **Run**: `npm run dev`
+4. **Toggle to LOCAL** in DROID interface
 
-## Development Setup
+## Installation
 
-1. **Clone the repository**:
+1. **Clone and setup**:
    ```bash
    git clone <your-repo-url>
    cd droid
-   ```
-
-2. **Install dependencies**:
-   ```bash
    npm install
+   npm run setup  # Shows setup instructions
    ```
 
-3. **Start Ollama** (if not already running):
-   ```bash
-   ollama serve
-   ```
-
-4. **Run in development mode**:
+2. **Development**:
    ```bash
    npm run dev
    ```
 
-## Building for Windows
-
-1. **Build the Windows executable**:
+3. **Build for distribution**:
    ```bash
+   # Windows
    npm run build:win
+   
+   # Linux
+   npm run build:linux
    ```
-
-2. **The installer will be created in**: `dist/DROID Setup.exe`
 
 ## Usage
 
 1. Press `Ctrl+Space` to open DROID
-2. Type natural language commands like:
+2. Type natural language commands:
    - "install chrome"
-   - "open calculator"
+   - "open calculator" 
    - "list files"
-   - "create a new folder called projects"
    - "show running processes"
-3. Press `Enter` to execute
-4. Press `Esc` to hide the window
+   - "create folder called projects"
+3. Click **CLOUD/LOCAL** to switch AI modes
+4. Press `Enter` to execute, `Esc` to hide
 
-## Example Commands
+## AI Modes
 
-- **Software Management**: "install vlc media player", "uninstall teams"
-- **System Operations**: "open task manager", "restart explorer"
-- **File Management**: "create folder Downloads", "delete temp files"
-- **Network**: "show ip address", "ping google.com"
+### Cloud Mode (Default)
+- ✅ **Free**: Groq API with generous limits
+- ✅ **Fast**: ~1-2 second responses
+- ✅ **No Setup**: Works immediately with API key
+- ✅ **Always Updated**: Latest AI models
+- ❌ **Requires Internet**: Won't work offline
 
-## Security Notes
+### Local Mode
+- ✅ **Private**: Everything runs on your machine
+- ✅ **Offline**: Works without internet
+- ✅ **Free Forever**: No API costs
+- ❌ **Setup Required**: Need to install Ollama
+- ❌ **Larger Download**: ~2GB AI model
 
-- DROID executes commands on your system - only use trusted commands
-- All AI processing happens locally via Ollama
-- No data is sent to external servers
+## Platform-Specific Commands
+
+### Windows
+- **Software**: "install vlc", "uninstall teams"
+- **System**: "open task manager", "restart explorer"
+- **Files**: "create folder Downloads", "show hidden files"
+
+### macOS
+- **Software**: "install chrome", "uninstall zoom"
+- **System**: "open activity monitor", "restart finder"
+- **Files**: "create folder Documents", "show hidden files"
+
+### Linux
+- **Software**: "install firefox", "update packages"
+- **System**: "show processes", "restart networking"
+- **Files**: "create directory", "list permissions"
+
+## Windows Build Requirements
+
+To build on Windows, ensure you have:
+- **Node.js** (16+)
+- **Python** (for native modules)
+- **Visual Studio Build Tools** or **Visual Studio Community**
+
+```bash
+# Install Windows build tools
+npm install --global windows-build-tools
+```
+
+## Security & Privacy
+
+- **Cloud Mode**: Commands sent to Groq API (encrypted)
+- **Local Mode**: Everything stays on your machine
+- **Safe Execution**: Commands reviewed before execution
+- **No Data Storage**: No command history saved
 
 ## Troubleshooting
 
-### "AI service is not available"
-- Ensure Ollama is running: `ollama serve`
-- Check if the model is installed: `ollama list`
-- Verify the model is pulled: `ollama pull llama3.2:3b`
+### "AI service not available"
+- **Cloud**: Check internet connection and API key
+- **Local**: Ensure Ollama is running (`ollama serve`)
 
 ### Global hotkey not working
-- Check if another application is using `Ctrl+Space`
-- Try running DROID as administrator
+- **Windows**: Run as administrator if needed
+- **Linux**: Check accessibility permissions
+- **macOS**: Allow in System Preferences > Privacy
 
-### Commands not executing
-- Ensure you're using Windows-compatible commands
-- Check Windows security settings for script execution
+### Build fails on Windows
+```bash
+# Clear and rebuild
+rm -rf node_modules dist
+npm install
+npm run build:win
+```
 
-## Development Notes
+## API Costs
 
-- Uses Electron for cross-platform compatibility
-- Lightweight AI model (3B parameters) for fast responses
-- Transparent, always-on-top UI for quick access
-- Safe command execution with error handling
+- **Groq API**: FREE tier (30,000 tokens/day = ~150+ commands)
+- **Local Ollama**: FREE forever (uses ~2GB RAM)
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Test on target platform
+4. Submit pull request
 
 ## License
 
